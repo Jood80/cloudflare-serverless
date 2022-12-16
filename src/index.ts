@@ -17,6 +17,7 @@ export interface Env {
 	//
 	// Example binding to R2. Learn more at https://dwrevelopers.cloudflare.com/workers/runtime-apis/r2/
 	// MY_BUCKET: R2Bucket;
+	CLIENT_ID: string;
 
 }
 
@@ -25,11 +26,10 @@ export default {
 		request: Request,
 		env: Env,
 		ctx: ExecutionContext
-	): Promise<Response> {
-		const CLIENT_ID = 'o-aHKqoioDgSKOfyqOiPWK2vDelte2R7EKCb3fS4LU4'
+	): Promise<Response> {	
 		const res = await fetch("https://api.unsplash.com/photos",{
 			headers: {
-				Authorization: `Client-ID ${CLIENT_ID}`
+				Authorization: `Client-ID ${env.CLIENT_ID}`
 			}
 		})
 		const data = await res.json() 
@@ -40,8 +40,5 @@ export default {
 				"Content-Type": "application/json"
 			}
 		})
-
-		const { query }: any = await request.json() // getBody
-		return new Response(`Your query was ${ query }`);
 	},
 };
