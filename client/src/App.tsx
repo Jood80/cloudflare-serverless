@@ -1,34 +1,64 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { useState } from "react";
+import "./App.css";
+
+const getImages = async (query: string) => {
+  const url = "https://serverless.shawar-nujood.workers.dev";
+
+  const res = await fetch(url, {
+    method: "POST",
+    mode: "cors",
+    cache: "no-cache",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    redirect: "follow",
+    referrerPolicy: "no-referrer",
+    body: JSON.stringify({ query }),
+  });
+
+  return res.json();
+};
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [query, setQuery] = useState("");
+  const [images, setImages] = useState([]);
+
+  const handleSubmit = async (event: any) => {
+    event.preventDefault();
+    const results = await getImages(query);
+    setImages(results);
+    setQuery(" ");
+  };
+
 
   return (
     <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="form">
+        <form onSubmit={handleSubmit}>
+          <input
+            type="search"
+            value={query}
+            placeholder="Search"
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <input type="submit" value="Submit" />
+        </form>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+
+      {images.length ? (
+        images.map((image: any) => (
+          <a key={image.id} href={image.link} target="_blank">
+            <img src={image.image} />
+          </a>
+        ))
+      ) : (
+        <div>
+          <a href="https://vitejs.dev" target="_blank">
+            <img src="/vite.svg" className="logo" alt="Vite logo" />
+          </a>
+        </div>
+      )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

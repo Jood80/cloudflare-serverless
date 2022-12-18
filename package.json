@@ -8,7 +8,12 @@
   },
   "private": true,
   "scripts": {
+    "init": "cd client && bun install",
     "start": "wrangler dev",
-    "deploy": "wrangler publish"
+    "deploy": "wrangler publish",
+    "dev": "concurrently \"npm start\" \"cd client && bun run dev\""
+  },
+  "dependencies": {
+    "concurrently": "^7.6.0"
   }
 }
