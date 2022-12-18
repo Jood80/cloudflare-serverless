@@ -25,16 +25,24 @@ export default {
 	async fetch(
 		request: Request,
 		env: Env,
-		ctx: ExecutionContext
+		_ctx: ExecutionContext
 	): Promise<Response> {	
-		const res = await fetch("https://api.unsplash.com/photos",{
+		const { query }: any = await request.json()
+	
+		const res = await fetch(`https://api.unsplash.com/search/photos?page=1&query=${query}`,{
 			headers: {
 				Authorization: `Client-ID ${env.CLIENT_ID}`
 			}
 		})
-		const data = await res.json() 
 		
-		return new Response(JSON.stringify(data),{
+		const data: any = await res.json() 
+		const images = data.results.map((image:any) => ({
+			id: image.id,
+			image: image.urls.small,
+			link: image.links.html
+		 }))
+		
+		return new Response(JSON.stringify(images),{
 			status: 200,
 			headers: {
 				"Content-Type": "application/json"
