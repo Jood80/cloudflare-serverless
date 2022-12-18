@@ -20,20 +20,25 @@ export interface Env {
 	CLIENT_ID: string;
 }
 
-const allowList = [
+const allowedOrigins = [
 	'https://serverless.shawar-nujood.workers.dev/',
 	'http://localhost:5173/'
 ]
 
-const corsHeaders = {
-	'Access-Control-Allow-Origin': '*',
+const corsHeaders = (origin: string) => ({
+	'Access-Control-Allow-Origin': origin ,
 	'Access-Control-Allow-Headers': '*',
 	"Access-Control-Allow-Methods": 'POST',
+})
+
+const checkOrigin = (request: Request) => {
+	const origin = request.headers.get('Origin')
+	return allowedOrigins.find(allowedOrigin => allowedOrigin.includes(origin as string))
 }
 
 const getImages = async (	request: Request,
 	env: Env): Promise<Response> => {
-	const {query} : any = await request.json()
+	const { query }: any = await request.json()
 	
 	const res = await fetch(`https://api.unsplash.com/search/photos?page=1&query=${query}`,{
 		headers: {
@@ -41,18 +46,19 @@ const getImages = async (	request: Request,
 		}
 	})
 	
-	const data: any = await res.json() 
+	const data : any = await res.json() 
 	const images = data.results.map((image:any) => ({
 		id: image.id,
 		image: image.urls.small,
 		link: image.links.html
-	 }))
-	
+	}))
+
+	const allowedOrigin = checkOrigin(request)
 	return new Response(JSON.stringify(images),{
 		status: 200,
 		headers: {
 			"Content-Type": "application/json", 
-			...corsHeaders
+			...corsHeaders(allowedOrigin as string)
 		}
 	})
 }
@@ -65,7 +71,8 @@ export default {
 	) {
 		
 		if(request.method === 'OPTIONS') {		
-			return new Response("OK",{ headers: corsHeaders })
+			const allowedOrigin = checkOrigin(request)
+			return new Response("OK",{ headers: corsHeaders(allowedOrigin as string) })
 		}
 
 		if(request.method === 'POST') {			
