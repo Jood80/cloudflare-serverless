@@ -18,7 +18,43 @@ export interface Env {
 	// Example binding to R2. Learn more at https://dwrevelopers.cloudflare.com/workers/runtime-apis/r2/
 	// MY_BUCKET: R2Bucket;
 	CLIENT_ID: string;
+}
 
+const allowList = [
+	'https://serverless.shawar-nujood.workers.dev/',
+	'http://localhost:5173/'
+]
+
+const corsHeaders = {
+	'Access-Control-Allow-Origin': '*',
+	'Access-Control-Allow-Headers': '*',
+	"Access-Control-Allow-Methods": 'POST',
+}
+
+const getImages = async (	request: Request,
+	env: Env): Promise<Response> => {
+	const {query} : any = await request.json()
+	
+	const res = await fetch(`https://api.unsplash.com/search/photos?page=1&query=${query}`,{
+		headers: {
+			Authorization: `Client-ID ${ env.CLIENT_ID }`,
+		}
+	})
+	
+	const data: any = await res.json() 
+	const images = data.results.map((image:any) => ({
+		id: image.id,
+		image: image.urls.small,
+		link: image.links.html
+	 }))
+	
+	return new Response(JSON.stringify(images),{
+		status: 200,
+		headers: {
+			"Content-Type": "application/json", 
+			...corsHeaders
+		}
+	})
 }
 
 export default {
@@ -26,27 +62,14 @@ export default {
 		request: Request,
 		env: Env,
 		_ctx: ExecutionContext
-	): Promise<Response> {	
-		const { query }: any = await request.json()
-	
-		const res = await fetch(`https://api.unsplash.com/search/photos?page=1&query=${query}`,{
-			headers: {
-				Authorization: `Client-ID ${env.CLIENT_ID}`
-			}
-		})
+	) {
 		
-		const data: any = await res.json() 
-		const images = data.results.map((image:any) => ({
-			id: image.id,
-			image: image.urls.small,
-			link: image.links.html
-		 }))
-		
-		return new Response(JSON.stringify(images),{
-			status: 200,
-			headers: {
-				"Content-Type": "application/json"
-			}
-		})
-	},
-};
+		if(request.method === 'OPTIONS') {		
+			return new Response("OK",{ headers: corsHeaders })
+		}
+
+		if(request.method === 'POST') {			
+			return getImages(request,env)
+		}
+	}
+}
