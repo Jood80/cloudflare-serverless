@@ -33,7 +33,8 @@ const corsHeaders = (origin: string) => ({
 
 const checkOrigin = (request: Request) => {
 	const origin = request.headers.get('Origin')
-	return allowedOrigins.find(allowedOrigin => allowedOrigin.includes(origin as string))
+	const foundOrigin = allowedOrigins.find(allowedOrigin => allowedOrigin.includes(origin as string))
+	return foundOrigin ? foundOrigin : allowedOrigins[0]
 }
 
 const getImages = async (	request: Request,
